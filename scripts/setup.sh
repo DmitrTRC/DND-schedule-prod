@@ -53,21 +53,39 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Check if pyproject.toml exists
+echo -e "\n${BOLD}Step 2: Checking project configuration...${NC}"
+if [ ! -f pyproject.toml ]; then
+    echo -e "${RED}✗ pyproject.toml not found in project root${NC}"
+    echo -e "\n${YELLOW}Please copy the following files to the project root first:${NC}"
+    echo -e "  1. pyproject.toml"
+    echo -e "  2. .gitignore"
+    echo -e "  3. .env.example"
+    echo -e "  4. Makefile"
+    echo -e "  5. .pre-commit-config.yaml"
+    echo -e "  6. .github/workflows/ci.yml"
+    echo -e "\n${YELLOW}Then run this script again.${NC}\n"
+    exit 1
+fi
+echo -e "${GREEN}✓ pyproject.toml found${NC}"
+
 # Copy .env.example to .env if it doesn't exist
-echo -e "\n${BOLD}Step 2: Setting up environment...${NC}"
+echo -e "\n${BOLD}Step 3: Setting up environment...${NC}"
 if [ ! -f .env ]; then
     if [ -f .env.example ]; then
         cp .env.example .env
         echo -e "${GREEN}✓ Created .env from .env.example${NC}"
     else
-        echo -e "${YELLOW}⊙ .env.example not found, skipping${NC}"
+        echo -e "${YELLOW}⊙ .env.example not found, creating empty .env${NC}"
+        touch .env
     fi
 else
     echo -e "${YELLOW}⊙ .env already exists${NC}"
 fi
 
 # Install dependencies with Poetry
-echo -e "\n${BOLD}Step 3: Installing dependencies...${NC}"
+echo -e "\n${BOLD}Step 4: Installing dependencies...${NC}"
+echo -e "${YELLOW}This may take a few minutes...${NC}"
 poetry install
 
 if [ $? -ne 0 ]; then
@@ -78,7 +96,7 @@ fi
 echo -e "${GREEN}✓ Dependencies installed${NC}"
 
 # Install pre-commit hooks
-echo -e "\n${BOLD}Step 4: Setting up pre-commit hooks...${NC}"
+echo -e "\n${BOLD}Step 5: Setting up pre-commit hooks...${NC}"
 poetry run pre-commit install
 
 if [ $? -ne 0 ]; then
@@ -89,7 +107,7 @@ fi
 
 # Create initial git commit if this is a new repo
 if [ -d .git ]; then
-    echo -e "\n${BOLD}Step 5: Git repository detected${NC}"
+    echo -e "\n${BOLD}Step 6: Git repository detected${NC}"
 
     # Check if there are any commits
     if ! git rev-parse HEAD &> /dev/null; then
@@ -110,7 +128,7 @@ Repository: https://github.com/DmitrTRC/schedule-dnd"
         echo -e "${YELLOW}⊙ Repository already has commits${NC}"
     fi
 else
-    echo -e "\n${BOLD}Step 5: Initializing Git repository...${NC}"
+    echo -e "\n${BOLD}Step 6: Initializing Git repository...${NC}"
     git init
     echo -e "${GREEN}✓ Git repository initialized${NC}"
 
@@ -144,8 +162,9 @@ echo -e "  ${GREEN}poetry shell${NC}        - Activate virtual environment\n"
 
 echo -e "${BOLD}Next steps:${NC}"
 echo -e "  1. Review .env file and adjust settings if needed"
-echo -e "  2. Start implementing domain models"
-echo -e "  3. Write tests as you develop"
-echo -e "  4. Run ${GREEN}make ci${NC} before committing\n"
+echo -e "  2. Read ${GREEN}SETUP_INSTRUCTIONS.md${NC} for detailed guide"
+echo -e "  3. Start implementing domain models"
+echo -e "  4. Write tests as you develop"
+echo -e "  5. Run ${GREEN}make ci${NC} before committing\n"
 
 echo -e "${YELLOW}Happy coding! 🚀${NC}\n"

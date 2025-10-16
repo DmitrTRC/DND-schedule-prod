@@ -9,9 +9,37 @@ This directory contains utility scripts for project setup and maintenance.
 
 ## 🚀 Quick Setup
 
-### Option 1: Automated Setup (Recommended)
+### ⚠️ Important: Two-Phase Setup Required!
 
-Run the complete setup script:
+**Phase 1: Copy Configuration Files** (MUST DO FIRST)  
+**Phase 2: Run Automated Setup**
+
+### Phase 1: Copy Configuration Files
+
+Before running any scripts, you must copy these files from Claude artifacts:
+
+| File | Destination | Status |
+|------|-------------|--------|
+| `pyproject.toml` | Project root | ✅ Required |
+| `.gitignore` | Project root | ✅ Required |
+| `.env.example` | Project root | ✅ Required |
+| `Makefile` | Project root | ✅ Required |
+| `.pre-commit-config.yaml` | Project root | ✅ Required |
+| `.github/workflows/ci.yml` | `.github/workflows/` | ✅ Required |
+
+**Check if files are in place:**
+
+```bash
+# Make script executable
+chmod +x scripts/copy_config_files.sh
+
+# Run checker
+./scripts/copy_config_files.sh
+```
+
+### Phase 2: Run Automated Setup
+
+Once all configuration files are copied:
 
 ```bash
 # Make script executable
@@ -65,6 +93,7 @@ chmod +x scripts/setup.sh
 **What it does:**
 - Verifies Python installation (3.11+)
 - Installs Poetry if not present
+- **Checks for required configuration files (pyproject.toml, etc.)**
 - Creates project structure
 - Sets up environment configuration
 - Installs dependencies
@@ -143,6 +172,49 @@ schedule-dnd/
 
 ---
 
+### `copy_config_files.sh`
+
+**Purpose:** Verify that all required configuration files are in place  
+**Language:** Bash  
+**Usage:**
+```bash
+chmod +x scripts/copy_config_files.sh
+./scripts/copy_config_files.sh
+```
+
+**What it checks:**
+- pyproject.toml in project root
+- .gitignore in project root
+- .env.example in project root
+- Makefile in project root
+- .pre-commit-config.yaml in project root
+- .github/workflows/ci.yml in workflows directory
+
+**Output:**
+```
+✓ pyproject.toml (exists in Project root)
+✓ .gitignore (exists in Project root)
+✗ Makefile (missing from Project root)
+...
+
+Summary:
+  Existing: 4
+  Missing: 2
+```
+
+**Features:**
+- ✅ Color-coded status for each file
+- ✅ Lists missing files with locations
+- ✅ Offers to create missing directories
+- ✅ Provides clear next steps
+
+**When to use:**
+- Before running setup.sh for the first time
+- When setup.sh fails with "pyproject.toml not found"
+- To verify project configuration after cloning
+
+---
+
 ### `lint.sh`
 
 **Purpose:** Run code quality checks  
@@ -189,18 +261,21 @@ Will run:
 ### First Time Setup
 
 ```bash
-# Clone repository
-git clone https://github.com/DmitrTRC/schedule-dnd.git
-cd schedule-dnd
+# 1. Copy all configuration files from Claude artifacts
+#    See SETUP_INSTRUCTIONS.md for details
 
-# Run automated setup
+# 2. Verify files are in place
+chmod +x scripts/copy_config_files.sh
+./scripts/copy_config_files.sh
+
+# 3. Run automated setup
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 
-# Activate virtual environment
+# 4. Activate virtual environment
 poetry shell
 
-# Start coding!
+# 5. Start coding!
 ```
 
 ### Rebuilding Structure
@@ -258,6 +333,20 @@ git commit -m "Your message"
 ---
 
 ## 🐛 Troubleshooting
+
+### Poetry could not find pyproject.toml
+
+**Problem:** Configuration files not copied to project root.
+
+**Solution:**
+```bash
+# Check what's missing
+./scripts/copy_config_files.sh
+
+# Copy missing files from Claude artifacts
+# Then run setup again
+./scripts/setup.sh
+```
 
 ### Python not found
 ```bash
