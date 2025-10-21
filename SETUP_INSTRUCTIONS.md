@@ -1,6 +1,6 @@
 # 🚀 Setup Instructions for Schedule DND
 
-**Author:** DmitrTRC  
+**Author:** DmitrTRC
 **Repository:** https://github.com/DmitrTRC/schedule-dnd
 
 ---
@@ -22,14 +22,15 @@ The setup process requires **TWO phases**:
 
 From Claude's conversation, you have received several **artifact files**. You need to copy these to your project:
 
-| Artifact Name | Destination | Required |
-|--------------|-------------|----------|
-| `pyproject.toml` | Project root | ✅ YES |
-| `.gitignore` | Project root | ✅ YES |
-| `.env.example` | Project root | ✅ YES |
-| `Makefile` | Project root | ✅ YES |
-| `.pre-commit-config.yaml` | Project root | ✅ YES |
-| `.github/workflows/ci.yml` | `.github/workflows/` | ✅ YES |
+| Artifact Name | Destination | Required | Note |
+|--------------|-------------|----------|------|
+| `pyproject.toml` | Project root | ✅ YES | |
+| `.gitignore` | Project root | ✅ YES | |
+| `.env.example` | Project root | ✅ YES | |
+| `Makefile` | Project root | ✅ YES | |
+| `.pre-commit-config.yaml` | Project root | ✅ YES | |
+| `.github/workflows/ci.yml` | `.github/workflows/` | ✅ YES | |
+| `README.md` | Project root | ℹ️ AUTO | Created automatically |
 
 ### Step 2: Create Required Directories
 
@@ -240,7 +241,14 @@ If all checks pass, you're ready to start development:
 
 ```bash
 # Activate virtual environment
-poetry shell
+# On Linux/macOS:
+source $(poetry env info --path)/bin/activate
+
+# On Windows (PowerShell):
+& "$(poetry env info --path)\Scripts\activate.ps1"
+
+# Or just use poetry run for individual commands:
+poetry run python -m schedule_dnd
 
 # Start coding!
 code .  # or your preferred editor
@@ -304,6 +312,6 @@ poetry shell        # Activate environment
 
 ---
 
-**Last Updated:** October 2025  
-**For Issues:** Check error messages and this guide  
+**Last Updated:** October 2025
+**For Issues:** Check error messages and this guide
 **Maintained by:** DmitrTRC

@@ -2,7 +2,7 @@
 
 This directory contains utility scripts for project setup and maintenance.
 
-**Author:** DmitrTRC  
+**Author:** DmitrTRC
 **Repository:** https://github.com/DmitrTRC/schedule-dnd
 
 ---
@@ -11,7 +11,7 @@ This directory contains utility scripts for project setup and maintenance.
 
 ### ⚠️ Important: Two-Phase Setup Required!
 
-**Phase 1: Copy Configuration Files** (MUST DO FIRST)  
+**Phase 1: Copy Configuration Files** (MUST DO FIRST)
 **Phase 2: Run Automated Setup**
 
 ### Phase 1: Copy Configuration Files
@@ -82,8 +82,8 @@ poetry run pre-commit install
 
 ### `setup.sh`
 
-**Purpose:** Complete automated project setup  
-**Language:** Bash  
+**Purpose:** Complete automated project setup
+**Language:** Bash
 **Usage:**
 ```bash
 chmod +x scripts/setup.sh
@@ -109,8 +109,8 @@ chmod +x scripts/setup.sh
 
 ### `setup_project_structure.py`
 
-**Purpose:** Create complete directory structure and placeholder files  
-**Language:** Python  
+**Purpose:** Create complete directory structure and placeholder files
+**Language:** Python
 **Usage:**
 ```bash
 python3 scripts/setup_project_structure.py
@@ -174,8 +174,8 @@ schedule-dnd/
 
 ### `copy_config_files.sh`
 
-**Purpose:** Verify that all required configuration files are in place  
-**Language:** Bash  
+**Purpose:** Verify that all required configuration files are in place
+**Language:** Bash
 **Usage:**
 ```bash
 chmod +x scripts/copy_config_files.sh
@@ -217,8 +217,8 @@ Summary:
 
 ### `lint.sh`
 
-**Purpose:** Run code quality checks  
-**Language:** Bash  
+**Purpose:** Run code quality checks
+**Language:** Bash
 **Status:** 🚧 To be implemented
 
 **Planned functionality:**
@@ -238,8 +238,8 @@ Will run:
 
 ### `test.sh`
 
-**Purpose:** Run test suite with coverage  
-**Language:** Bash  
+**Purpose:** Run test suite with coverage
+**Language:** Bash
 **Status:** 🚧 To be implemented
 
 **Planned functionality:**
@@ -273,7 +273,11 @@ chmod +x scripts/setup.sh
 ./scripts/setup.sh
 
 # 4. Activate virtual environment
-poetry shell
+# On Linux/macOS:
+source $(poetry env info --path)/bin/activate
+
+# On Windows (PowerShell):
+# & "$(poetry env info --path)\Scripts\activate.ps1"
 
 # 5. Start coding!
 ```
@@ -453,5 +457,5 @@ set -e  # Exit on error
 
 ---
 
-**Last Updated:** October 2025  
+**Last Updated:** October 2025
 **Maintained by:** DmitrTRC

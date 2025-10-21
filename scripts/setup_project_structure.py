@@ -129,25 +129,19 @@ def main() -> int:
         # GitHub
         ".github/workflows",
         ".github/ISSUE_TEMPLATE",
-
         # Documentation
         "docs/api",
         "docs/architecture",
-
         # Source code - Domain Layer
         "src/schedule_dnd/domain",
-
         # Source code - Application Layer
         "src/schedule_dnd/application/services",
-
         # Source code - Infrastructure Layer
         "src/schedule_dnd/infrastructure/repositories",
         "src/schedule_dnd/infrastructure/exporters",
         "src/schedule_dnd/infrastructure/config",
-
         # Source code - Presentation Layer
         "src/schedule_dnd/presentation/cli/commands",
-
         # Tests
         "tests/unit/domain",
         "tests/unit/application",
@@ -155,10 +149,8 @@ def main() -> int:
         "tests/unit/presentation",
         "tests/integration",
         "tests/fixtures",
-
         # Scripts
         "scripts",
-
         # Data directories
         "data",
         "output",
@@ -169,13 +161,67 @@ def main() -> int:
     files: Dict[str, str] = {
         # Root level files
         ".env": "",  # Empty .env file
+        "README.md": """# 🚔 Schedule DND - Patrol Schedule Management System
 
+Production-ready application for managing Voluntary People's Squads (DND) patrol schedules.
+
+**Author:** DmitrTRC
+**Repository:** https://github.com/DmitrTRC/schedule-dnd
+**Version:** 2.0.0
+
+## 🎯 Features
+
+- ✅ Interactive CLI for schedule input
+- ✅ Support for 8 DND units
+- ✅ Export to 5 formats (JSON, Excel, CSV, Markdown, HTML)
+- ✅ Data validation and duplicate prevention
+- ✅ Autosave functionality
+- ✅ Clean Architecture design
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+poetry install
+
+# Activate environment (choose one):
+
+# Option 1: Helper script
+source activate_env.sh
+
+# Option 2: Manual
+source $(poetry env info --path)/bin/activate  # Linux/macOS
+
+# Option 3: Use poetry run (no activation needed)
+poetry run schedule-dnd
+```
+
+## 📚 Documentation
+
+- [Setup Instructions](SETUP_INSTRUCTIONS.md)
+- [Architecture](docs/architecture.md)
+- [Contributing](docs/contributing.md)
+- [Scripts Documentation](scripts/README.md)
+
+## 🛠️ Development
+
+```bash
+make help           # Show all commands
+make dev-install    # Install dev dependencies
+make test           # Run tests
+make lint           # Check code quality
+make format         # Format code
+```
+
+## 📝 License
+
+MIT License - see LICENSE file for details
+""",
         # Source code __init__.py files
         "src/schedule_dnd/__init__.py": get_init_content("Schedule DND"),
         "src/schedule_dnd/__main__.py": get_placeholder_content(
             "main", "Entry point for Schedule DND application"
         ),
-
         # Domain Layer
         "src/schedule_dnd/domain/__init__.py": get_init_content("Domain"),
         "src/schedule_dnd/domain/models.py": get_placeholder_content(
@@ -189,34 +235,38 @@ def main() -> int:
         "src/schedule_dnd/domain/constants.py": get_placeholder_content(
             "constants", "Domain constants"
         ),
-
         # Application Layer
         "src/schedule_dnd/application/__init__.py": get_init_content("Application"),
         "src/schedule_dnd/application/dto.py": get_placeholder_content(
             "dto", "Data Transfer Objects"
         ),
-        "src/schedule_dnd/application/services/__init__.py": get_init_content("Services"),
+        "src/schedule_dnd/application/services/__init__.py": get_init_content(
+            "Services"
+        ),
         "src/schedule_dnd/application/services/schedule_service.py": get_placeholder_content(
             "schedule_service", "Schedule business logic service"
         ),
         "src/schedule_dnd/application/services/export_service.py": get_placeholder_content(
             "export_service", "Export orchestration service"
         ),
-
         # Infrastructure Layer
-        "src/schedule_dnd/infrastructure/__init__.py": get_init_content("Infrastructure"),
-
+        "src/schedule_dnd/infrastructure/__init__.py": get_init_content(
+            "Infrastructure"
+        ),
         # Repositories
-        "src/schedule_dnd/infrastructure/repositories/__init__.py": get_init_content("Repositories"),
+        "src/schedule_dnd/infrastructure/repositories/__init__.py": get_init_content(
+            "Repositories"
+        ),
         "src/schedule_dnd/infrastructure/repositories/base.py": get_placeholder_content(
             "base", "Abstract repository base class"
         ),
         "src/schedule_dnd/infrastructure/repositories/json_repository.py": get_placeholder_content(
             "json_repository", "JSON file repository implementation"
         ),
-
         # Exporters
-        "src/schedule_dnd/infrastructure/exporters/__init__.py": get_init_content("Exporters"),
+        "src/schedule_dnd/infrastructure/exporters/__init__.py": get_init_content(
+            "Exporters"
+        ),
         "src/schedule_dnd/infrastructure/exporters/base.py": get_placeholder_content(
             "base", "Abstract exporter base class"
         ),
@@ -238,13 +288,13 @@ def main() -> int:
         "src/schedule_dnd/infrastructure/exporters/factory.py": get_placeholder_content(
             "factory", "Exporter factory"
         ),
-
         # Config
-        "src/schedule_dnd/infrastructure/config/__init__.py": get_init_content("Config"),
+        "src/schedule_dnd/infrastructure/config/__init__.py": get_init_content(
+            "Config"
+        ),
         "src/schedule_dnd/infrastructure/config/settings.py": get_placeholder_content(
             "settings", "Application settings (Pydantic Settings)"
         ),
-
         # Presentation Layer
         "src/schedule_dnd/presentation/__init__.py": get_init_content("Presentation"),
         "src/schedule_dnd/presentation/cli/__init__.py": get_init_content("CLI"),
@@ -254,9 +304,10 @@ def main() -> int:
         "src/schedule_dnd/presentation/cli/formatters.py": get_placeholder_content(
             "formatters", "Output formatters for CLI"
         ),
-
         # CLI Commands
-        "src/schedule_dnd/presentation/cli/commands/__init__.py": get_init_content("Commands"),
+        "src/schedule_dnd/presentation/cli/commands/__init__.py": get_init_content(
+            "Commands"
+        ),
         "src/schedule_dnd/presentation/cli/commands/create.py": get_placeholder_content(
             "create", "Create new schedule command"
         ),
@@ -269,13 +320,11 @@ def main() -> int:
         "src/schedule_dnd/presentation/cli/commands/base.py": get_placeholder_content(
             "base", "Base command class"
         ),
-
         # Tests
         "tests/__init__.py": "",
         "tests/conftest.py": get_placeholder_content(
             "conftest", "Pytest configuration and fixtures"
         ),
-
         # Unit tests
         "tests/unit/__init__.py": "",
         "tests/unit/domain/__init__.py": "",
@@ -288,7 +337,6 @@ def main() -> int:
         "tests/unit/domain/test_validators.py": get_placeholder_content(
             "test_validators", "Unit tests for validators"
         ),
-
         "tests/unit/application/__init__.py": "",
         "tests/unit/application/test_schedule_service.py": get_placeholder_content(
             "test_schedule_service", "Unit tests for schedule service"
@@ -296,7 +344,6 @@ def main() -> int:
         "tests/unit/application/test_export_service.py": get_placeholder_content(
             "test_export_service", "Unit tests for export service"
         ),
-
         "tests/unit/infrastructure/__init__.py": "",
         "tests/unit/infrastructure/test_repositories.py": get_placeholder_content(
             "test_repositories", "Unit tests for repositories"
@@ -304,35 +351,29 @@ def main() -> int:
         "tests/unit/infrastructure/test_exporters.py": get_placeholder_content(
             "test_exporters", "Unit tests for exporters"
         ),
-
         "tests/unit/presentation/__init__.py": "",
         "tests/unit/presentation/test_cli.py": get_placeholder_content(
             "test_cli", "Unit tests for CLI"
         ),
-
         # Integration tests
         "tests/integration/__init__.py": "",
         "tests/integration/test_end_to_end.py": get_placeholder_content(
             "test_end_to_end", "End-to-end integration tests"
         ),
-
         # Test fixtures
         "tests/fixtures/sample_schedule.json": "{}",
-
         # Documentation
         "docs/architecture.md": "# Architecture\n\nTODO: Document architecture\n",
         "docs/api.md": "# API Documentation\n\nTODO: Document API\n",
         "docs/contributing.md": "# Contributing Guide\n\nTODO: Document contribution guidelines\n",
-
         # GitHub
         ".github/ISSUE_TEMPLATE/bug_report.md": "# Bug Report\n\nTODO: Create template\n",
         ".github/ISSUE_TEMPLATE/feature_request.md": "# Feature Request\n\nTODO: Create template\n",
         ".github/pull_request_template.md": "# Pull Request\n\nTODO: Create template\n",
-
         # Scripts
         "scripts/lint.sh": "#!/bin/bash\n# TODO: Add linting script\n",
         "scripts/test.sh": "#!/bin/bash\n# TODO: Add testing script\n",
-
+        "activate_env.sh": "# Placeholder - will be replaced by artifact\n",
         # Keep directories
         "data/.gitkeep": "",
         "output/.gitkeep": "",
@@ -351,7 +392,9 @@ def main() -> int:
         else:
             existing_dirs += 1
 
-    print(f"\n{BOLD}Summary:{RESET} {GREEN}{created_dirs} created{RESET}, {YELLOW}{existing_dirs} existed{RESET}\n")
+    print(
+        f"\n{BOLD}Summary:{RESET} {GREEN}{created_dirs} created{RESET}, {YELLOW}{existing_dirs} existed{RESET}\n"
+    )
 
     # Create files
     print(f"{BOLD}Creating files...{RESET}")
@@ -365,7 +408,9 @@ def main() -> int:
         else:
             existing_files += 1
 
-    print(f"\n{BOLD}Summary:{RESET} {GREEN}{created_files} created{RESET}, {YELLOW}{existing_files} existed{RESET}\n")
+    print(
+        f"\n{BOLD}Summary:{RESET} {GREEN}{created_files} created{RESET}, {YELLOW}{existing_files} existed{RESET}\n"
+    )
 
     # Final summary
     print(f"{BLUE}{BOLD}{'=' * 70}{RESET}")

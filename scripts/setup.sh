@@ -69,6 +69,12 @@ if [ ! -f pyproject.toml ]; then
 fi
 echo -e "${GREEN}✓ pyproject.toml found${NC}"
 
+# Ensure README.md exists (created by structure script, but verify)
+if [ ! -f README.md ]; then
+    echo -e "${YELLOW}⊙ README.md not found, it should have been created by structure script${NC}"
+    echo -e "${YELLOW}⊙ This might cause issues with Poetry installation${NC}"
+fi
+
 # Copy .env.example to .env if it doesn't exist
 echo -e "\n${BOLD}Step 3: Setting up environment...${NC}"
 if [ ! -f .env ]; then
@@ -158,7 +164,11 @@ echo -e "  ${GREEN}make run${NC}            - Run the application"
 echo -e "  ${GREEN}make test${NC}           - Run tests"
 echo -e "  ${GREEN}make lint${NC}           - Run linting checks"
 echo -e "  ${GREEN}make format${NC}         - Format code"
-echo -e "  ${GREEN}poetry shell${NC}        - Activate virtual environment\n"
+echo -e "  ${GREEN}poetry run python -m schedule_dnd${NC} - Run directly\n"
+
+echo -e "${BOLD}Activate environment:${NC}"
+echo -e "  ${GREEN}source \$(poetry env info --path)/bin/activate${NC}  # On Linux/macOS"
+echo -e "  ${GREEN}poetry env info --path${NC} then activate manually    # On Windows\n"
 
 echo -e "${BOLD}Next steps:${NC}"
 echo -e "  1. Review .env file and adjust settings if needed"

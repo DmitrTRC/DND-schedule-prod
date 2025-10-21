@@ -167,8 +167,12 @@ update: ## Update dependencies
 	poetry run pre-commit autoupdate
 	@echo "$(GREEN)✓ Dependencies updated$(NC)"
 
-shell: ## Open Poetry shell
-	@echo "$(BLUE)Opening Poetry shell...$(NC)"
-	poetry shell
+env-info: ## Show virtual environment information
+	@echo "$(BLUE)Virtual Environment Information:$(NC)"
+	@poetry env info
+	@echo ""
+	@echo "$(GREEN)To activate the environment:$(NC)"
+	@echo "  Linux/macOS: source $(poetry env info --path)/bin/activate"
+	@echo "  Windows:     $(poetry env info --path)\\Scripts\\activate"
 
 .DEFAULT_GOAL := help

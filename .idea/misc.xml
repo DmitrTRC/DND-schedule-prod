@@ -3,8 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.13 (DND-schedule-prod)" />
   </component>
-  <component name="GithubDefaultAccount">
-    <option name="defaultAccountId" value="e411281e-c4ef-45c7-96e5-f8e508cfdb97" />
-  </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.13 (DND-schedule-prod)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Poetry (DND-schedule-prod)" project-jdk-type="Python SDK" />
 </project>
