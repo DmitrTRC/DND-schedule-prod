@@ -4,6 +4,7 @@ Main CLI application.
 Author: DmitrTRC
 """
 
+import locale
 import sys
 from typing import Optional
 
@@ -15,11 +16,32 @@ from schedule_dnd.domain.constants import APP_NAME, APP_VERSION
 from schedule_dnd.infrastructure.config.settings import get_settings
 
 
+# Fix encoding for Mac terminals
+def fix_terminal_encoding():
+    """Fix terminal encoding issues on Mac."""
+    try:
+        # Set locale to UTF-8
+        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+    except:
+        pass
+
+    # Force stdin/stdout to UTF-8
+    if sys.stdin.encoding != "utf-8":
+        sys.stdin.reconfigure(encoding="utf-8")
+    if sys.stdout.encoding != "utf-8":
+        sys.stdout.reconfigure(encoding="utf-8")
+    if sys.stderr.encoding != "utf-8":
+        sys.stderr.reconfigure(encoding="utf-8")
+
+
 class CLIApp:
     """Main CLI application."""
 
     def __init__(self) -> None:
         """Initialize CLI application."""
+        # Fix encoding first
+        fix_terminal_encoding()
+
         self.console = Console()
         self.settings = get_settings()
         self.running = True

@@ -62,10 +62,10 @@ class BaseExporter(ABC):
         Returns:
             Default filename
         """
-        month = schedule.metadata.month.value
+        month_num = schedule.metadata.month.to_number()
         year = schedule.metadata.year
         ext = self.get_file_extension()
-        return f"schedule_{year}_{month:02d}.{ext}"
+        return f"schedule_{year}_{month_num:02d}.{ext}"
 
     def validate_schedule(self, schedule: Schedule) -> bool:
         """

@@ -348,7 +348,7 @@ class ScheduleService:
                 warnings.append(f"No shifts defined for {unit_dto.unit_name}")
 
         # Check if schedule already exists
-        month_num = dto.month.value
+        month_num = dto.month.to_number()
         filepath = self.settings.get_schedule_file_path(dto.year, month_num)
         if self.repository.exists(filepath):
             warnings.append(

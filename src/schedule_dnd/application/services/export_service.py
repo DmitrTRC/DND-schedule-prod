@@ -5,6 +5,7 @@ Handles export operations using exporters.
 Author: DmitrTRC
 """
 
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -15,6 +16,8 @@ from schedule_dnd.domain.models import Schedule
 from schedule_dnd.infrastructure.config.settings import get_settings
 from schedule_dnd.infrastructure.exporters.factory import ExporterFactory
 from schedule_dnd.infrastructure.repositories.base import ScheduleRepository
+
+logger = logging.getLogger(__name__)
 
 
 class ExportService:
@@ -51,6 +54,8 @@ class ExportService:
             ExportFailedError: If export fails
         """
         try:
+            logger.info(f"Exporting to {format_type.value} format")
+
             # Create exporter
             exporter = ExporterFactory.create(format_type)
 
@@ -60,6 +65,10 @@ class ExportService:
             # Get file size
             file_size = result_path.stat().st_size if result_path.exists() else None
 
+            logger.info(
+                f"Export to {format_type.value} successful: {result_path} ({file_size} bytes)"
+            )
+
             return ExportResultDTO(
                 success=True,
                 format=format_type.value,
@@ -68,6 +77,7 @@ class ExportService:
             )
 
         except Exception as e:
+            logger.error(f"Export to {format_type.value} FAILED: {e}", exc_info=True)
             return ExportResultDTO(
                 success=False,
                 format=format_type.value,
@@ -89,6 +99,10 @@ class ExportService:
             ScheduleNotFoundError: If schedule file not found
             ExportFailedError: If export fails
         """
+        logger.info(
+            f"Export from file request: {request.schedule_id} to {request.format}"
+        )
+
         # Resolve schedule file path
         if request.schedule_id:
             schedule_path = self._resolve_schedule_path(request.schedule_id)
@@ -97,6 +111,7 @@ class ExportService:
 
         # Check if file exists
         if not self.repository.exists(schedule_path):
+            logger.error(f"Schedule not found: {request.schedule_id}")
             raise ScheduleNotFoundError(request.schedule_id)
 
         # Load schedule
@@ -109,6 +124,7 @@ class ExportService:
             supported = [f.value for f in ExporterFactory.get_supported_formats()]
             from schedule_dnd.domain.exceptions import UnsupportedFormatError
 
+            logger.error(f"Unsupported format: {request.format}")
             raise UnsupportedFormatError(request.format, supported)
 
         # Prepare output path
@@ -130,6 +146,7 @@ class ExportService:
         Returns:
             List of export results for each format
         """
+        logger.info("Starting export to ALL formats")
         results: list[ExportResultDTO] = []
         output_dir = base_output_dir or self.settings.output_dir
 
@@ -143,6 +160,9 @@ class ExportService:
                 results.append(result)
 
             except Exception as e:
+                logger.error(
+                    f"Failed to export to {format_type.value}: {e}", exc_info=True
+                )
                 results.append(
                     ExportResultDTO(
                         success=False,
@@ -152,6 +172,10 @@ class ExportService:
                     )
                 )
 
+        success_count = sum(1 for r in results if r.success)
+        logger.info(
+            f"Export to all formats complete: {success_count}/{len(results)} successful"
+        )
         return results
 
     def get_supported_formats(self) -> list[str]:

@@ -216,9 +216,14 @@ class Settings(BaseSettings):
         """Check if running in testing mode."""
         return self.environment == Environment.TESTING
 
-    def get_log_file_path(self) -> Path:
+    @property
+    def log_file(self) -> Path:
         """Get the log file path."""
         return self.log_dir / f"{self.app_name.lower().replace(' ', '_')}.log"
+
+    def get_log_file_path(self) -> Path:
+        """Get the log file path (deprecated, use .log_file property)."""
+        return self.log_file
 
     def get_schedule_file_path(self, year: int, month: int) -> Path:
         """
