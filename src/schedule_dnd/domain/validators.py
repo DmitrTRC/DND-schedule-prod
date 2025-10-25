@@ -48,6 +48,9 @@ def validate_day(day: int, month: int, year: int) -> None:
             value=day,
         )
 
+    # Validate month before using calendar.monthrange to avoid IllegalMonthError
+    validate_month_number(month)
+
     # Check if day is valid for the specific month
     max_day_in_month = calendar.monthrange(year, month)[1]
     if day > max_day_in_month:

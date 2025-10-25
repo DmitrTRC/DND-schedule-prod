@@ -70,7 +70,7 @@ def sample_schedule():
 
     unit2 = Unit(
         id=2,
-        unit_name="ДНД «Кузьмоловский»",
+        unit_name="ДНД «Заневское ГП»",
         shifts=[
             Shift(
                 date="03.10.2025",
@@ -251,7 +251,7 @@ class TestCSVExporter:
         # Check first data row contains expected values
         assert "Всеволожский дозор" in rows[1][0]
         assert "01.10.2025" in rows[1][1]
-        assert "PDN" in rows[1][3]
+        assert "ПДН" in rows[1][3]  # DutyType.PDN value is Russian "ПДН"
 
     def test_export_multiple_units(self, sample_schedule, temp_output_dir):
         """Test CSV export with multiple units."""
@@ -267,7 +267,7 @@ class TestCSVExporter:
         # Verify both units are present
         unit_names = [row[0] for row in rows[1:]]
         assert any("Всеволожский дозор" in name for name in unit_names)
-        assert any("Кузьмоловский" in name for name in unit_names)
+        assert any("Заневское ГП" in name for name in unit_names)
 
     def test_export_encoding(self, sample_schedule, temp_output_dir):
         """Test CSV export handles UTF-8 encoding correctly."""
@@ -467,7 +467,7 @@ class TestExcelExporter:
 
         # Check data (starts from row 4)
         assert "Всеволожский дозор" in ws["A4"].value
-        assert ws["D4"].value == "PDN"
+        assert ws["D4"].value == "ПДН"  # DutyType.PDN value is Russian "ПДН"
 
     def test_export_with_metadata(self, sample_schedule, temp_output_dir, monkeypatch):
         """Test Excel export includes metadata when enabled."""
@@ -506,8 +506,9 @@ class TestExcelExporter:
 
         # Check header styling (row 3)
         header_cell = ws["A3"]
-        assert header_cell.fill.start_color.rgb == "FF366092"
-        assert header_cell.font.color.rgb == "FFFFFFFF"
+        # Note: openpyxl may return color without alpha channel prefix
+        assert header_cell.fill.start_color.rgb in ("FF366092", "00366092")
+        assert header_cell.font.color.rgb in ("FFFFFFFF", "00FFFFFF")
         assert header_cell.font.bold is True
 
         # Check borders are applied
@@ -597,7 +598,7 @@ class TestMarkdownExporter:
         # Check data
         assert "Всеволожский дозор" in content
         assert "01.10.2025" in content
-        assert "PDN" in content
+        assert "ПДН" in content  # DutyType.PDN value is Russian "ПДН"
 
     def test_export_with_metadata(self, sample_schedule, temp_output_dir, monkeypatch):
         """Test Markdown export includes metadata when enabled."""
