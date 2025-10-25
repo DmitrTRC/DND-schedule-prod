@@ -10,7 +10,7 @@ Author: DmitrTRC
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from schedule_dnd.domain.constants import UNITS
 from schedule_dnd.domain.enums import DutyType, Month
@@ -79,10 +79,7 @@ class ScheduleCreateDTO(BaseModel):
     year: int = Field(..., description="Year of the schedule", ge=2020, le=2100)
     units: list[UnitCreateDTO] = Field(..., description="List of units with shifts")
 
-    class Config:
-        """Pydantic configuration."""
-
-        use_enum_values = False
+    model_config = ConfigDict(use_enum_values=False)
 
 
 class ShiftUpdateDTO(BaseModel):
@@ -123,11 +120,10 @@ class ShiftResponseDTO(BaseModel):
     time: str
     notes: str
 
-    class Config:
-        """Pydantic configuration."""
-
-        use_enum_values = True
-        from_attributes = True
+    model_config = ConfigDict(
+        use_enum_values=True,
+        from_attributes=True,
+    )
 
 
 class UnitResponseDTO(BaseModel):
@@ -137,10 +133,7 @@ class UnitResponseDTO(BaseModel):
     unit_name: str
     shifts: list[ShiftResponseDTO]
 
-    class Config:
-        """Pydantic configuration."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ScheduleMetadataDTO(BaseModel):
@@ -155,10 +148,7 @@ class ScheduleMetadataDTO(BaseModel):
     signatory: Optional[str] = None
     note: Optional[str] = None
 
-    class Config:
-        """Pydantic configuration."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ScheduleResponseDTO(BaseModel):
@@ -167,10 +157,7 @@ class ScheduleResponseDTO(BaseModel):
     metadata: ScheduleMetadataDTO
     schedule: list[UnitResponseDTO]
 
-    class Config:
-        """Pydantic configuration."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ScheduleListItemDTO(BaseModel):
@@ -183,10 +170,7 @@ class ScheduleListItemDTO(BaseModel):
     unit_count: int
     total_shifts: int
 
-    class Config:
-        """Pydantic configuration."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -215,10 +199,7 @@ class ExportResultDTO(BaseModel):
     error: Optional[str] = None
     file_size: Optional[int] = None
 
-    class Config:
-        """Pydantic configuration."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -233,10 +214,7 @@ class ValidationResultDTO(BaseModel):
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
-    class Config:
-        """Pydantic configuration."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ShiftValidationDTO(BaseModel):
@@ -276,10 +254,7 @@ class UnitStatisticsDTO(BaseModel):
     shifts_by_type: dict[str, int]
     avg_shifts_per_week: float
 
-    class Config:
-        """Pydantic configuration."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ScheduleStatisticsDTO(BaseModel):
@@ -292,7 +267,4 @@ class ScheduleStatisticsDTO(BaseModel):
     shifts_by_type: dict[str, int]
     units: list[UnitStatisticsDTO]
 
-    class Config:
-        """Pydantic configuration."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

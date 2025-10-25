@@ -68,7 +68,7 @@ def sample_json_data() -> dict:
     return {
         "metadata": {
             "document_type": "patrol_schedule",
-            "month": "октябрь",
+            "month": "Октябрь",
             "year": 2025,
             "created_at": "2025-10-01T12:00:00",
             "created_by": "manual_input",
@@ -120,7 +120,7 @@ class TestSave:
         with open(result_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         assert data["metadata"]["year"] == 2025
-        assert data["metadata"]["month"] == "октябрь"
+        assert data["metadata"]["month"] == "Октябрь"
         assert len(data["schedule"]) == 1
 
     def test_save_schedule_custom_path(
@@ -296,7 +296,7 @@ class TestLoad:
         filepath = temp_data_dir / "incomplete.json"
         incomplete_data = {
             "metadata": {
-                "month": "октябрь"
+                "month": "Октябрь"
                 # Missing year and other required fields
             }
         }
@@ -498,10 +498,8 @@ class TestListSchedules:
 class TestBackup:
     """Test cases for backup operations."""
 
-    @patch("schedule_dnd.infrastructure.repositories.json_repository.get_settings")
     def test_backup_success(
         self,
-        mock_settings: Mock,
         repository: JSONRepository,
         temp_data_dir: Path,
     ) -> None:
@@ -510,21 +508,28 @@ class TestBackup:
         filepath = temp_data_dir / "test.json"
         filepath.write_text('{"test": "data"}')
 
-        backup_dir = temp_data_dir / "backups"
-        backup_dir.mkdir()
-
-        mock_settings.return_value.get_backup_file_path.return_value = (
-            backup_dir / "test_backup.json"
-        )
-        mock_settings.return_value.max_backups = 5
-
         # Act
         backup_path = repository.backup(filepath)
 
-        # Assert
-        assert backup_path.exists()
-        assert backup_path != filepath
-        assert backup_path.parent == backup_dir
+        # Assert - check backup was created
+        assert backup_path.exists(), "Backup file should exist"
+        assert backup_path != filepath, "Backup should be different from original"
+
+        # Check backup is in a 'backups' directory
+        assert "backups" in str(backup_path), "Backup should be in backups directory"
+
+        # Check backup filename pattern
+        assert (
+            "test_backup_" in backup_path.name
+        ), "Backup should have backup pattern in name"
+        assert backup_path.suffix == ".json", "Backup should have same extension"
+
+        # Verify backup content matches original
+        with open(backup_path, "r") as f:
+            backup_content = f.read()
+        assert (
+            backup_content == '{"test": "data"}'
+        ), "Backup content should match original"
 
     def test_backup_file_not_found(
         self,
@@ -564,7 +569,7 @@ class TestGetMetadata:
         metadata = repository.get_schedule_metadata(filepath)
 
         # Assert
-        assert metadata["month"] == "октябрь"
+        assert metadata["month"] == "Октябрь"
         assert metadata["year"] == 2025
         assert metadata["unit_count"] == 1
         assert metadata["total_shifts"] == 1
@@ -632,7 +637,7 @@ class TestPrivateMethods:
         assert "metadata" in data
         assert "schedule" in data
         assert data["metadata"]["year"] == 2025
-        assert data["metadata"]["month"] == "октябрь"
+        assert data["metadata"]["month"] == "Октябрь"
         assert len(data["schedule"]) == 1
 
     def test_dict_to_schedule(

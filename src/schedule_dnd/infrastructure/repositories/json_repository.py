@@ -275,7 +275,7 @@ class JSONRepository(ScheduleRepository):
 
     def _get_default_path(self, schedule: Schedule) -> Path:
         """Get default file path for a schedule."""
-        filename = f"schedule_{schedule.metadata.year}_{schedule.metadata.month.value:02d}.json"
+        filename = f"schedule_{schedule.metadata.year}_{schedule.metadata.month.to_number():02d}.json"
         return self.base_dir / filename
 
     def _schedule_to_dict(self, schedule: Schedule) -> dict[str, Any]:

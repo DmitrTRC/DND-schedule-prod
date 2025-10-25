@@ -123,7 +123,7 @@ class TestCreateSchedule:
         # Assert
         assert isinstance(result, ScheduleResponseDTO)
         assert result.metadata.year == 2025
-        assert result.metadata.month == "октябрь"
+        assert result.metadata.month == "Октябрь"
         assert len(result.schedule) == 1
         assert len(result.schedule[0].shifts) == 1
 
@@ -490,18 +490,18 @@ class TestUpdateShift:
         """Test updating non-existent shift raises error."""
         # Arrange
         mock_repository.load.return_value = sample_schedule
-        new_shift_dto = ShiftCreateDTO(
-            date="99.10.2025",  # Non-existent date
-            duty_type=DutyType.UUP,
-        )
 
-        # Act & Assert
-        with pytest.raises(DomainValidationError):
+        # Act & Assert - Try to update a shift that doesn't exist in schedule
+        # Use valid date format but date that's not in the schedule
+        with pytest.raises(DomainValidationError, match="Shift not found"):
             schedule_service.update_shift(
                 schedule_id="test.json",
                 unit_name="ДНД «Всеволожский дозор»",
-                old_date="99.10.2025",
-                new_shift_dto=new_shift_dto,
+                old_date="31.10.2025",  # Valid date but not in schedule
+                new_shift_dto=ShiftCreateDTO(
+                    date="31.10.2025",
+                    duty_type=DutyType.UUP,
+                ),
             )
 
 
@@ -700,7 +700,7 @@ class TestGetScheduleStatistics:
 
         # Assert
         assert isinstance(result, ScheduleStatisticsDTO)
-        assert result.month == "октябрь"
+        assert result.month == "Октябрь"
         assert result.year == 2025
         assert result.total_units == 1
         assert result.total_shifts == 2
@@ -798,6 +798,6 @@ class TestHelperMethods:
         # Assert
         assert isinstance(result, ScheduleResponseDTO)
         assert result.metadata.year == 2025
-        assert result.metadata.month == "октябрь"
+        assert result.metadata.month == "Октябрь"
         assert len(result.schedule) == 1
         assert len(result.schedule[0].shifts) == 2

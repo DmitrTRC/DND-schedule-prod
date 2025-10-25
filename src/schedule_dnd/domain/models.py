@@ -8,7 +8,7 @@ Author: DmitrTRC
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from schedule_dnd.domain.constants import (
     DEFAULT_SHIFT_NOTE,
@@ -134,12 +134,11 @@ class Shift(BaseModel):
         """String representation of shift."""
         return f"{self.date} - {self.duty_type.value} ({self.time})"
 
-    class Config:
-        """Pydantic configuration."""
-
-        frozen = False  # Allow updates
-        use_enum_values = False  # Keep enum objects
-        validate_assignment = True  # Validate on assignment
+    model_config = ConfigDict(
+        frozen=False,  # Allow updates
+        use_enum_values=False,  # Keep enum objects
+        validate_assignment=True,  # Validate on assignment
+    )
 
 
 class Unit(BaseModel):
@@ -300,11 +299,10 @@ class Unit(BaseModel):
         """String representation of unit."""
         return f"{self.unit_name} ({self.get_shift_count()} shifts)"
 
-    class Config:
-        """Pydantic configuration."""
-
-        frozen = False
-        validate_assignment = True
+    model_config = ConfigDict(
+        frozen=False,
+        validate_assignment=True,
+    )
 
 
 class ScheduleMetadata(BaseModel):
@@ -376,11 +374,10 @@ class ScheduleMetadata(BaseModel):
         """Get formatted period string (e.g., 'October 2025')."""
         return f"{self.month.value.capitalize()} {self.year}"
 
-    class Config:
-        """Pydantic configuration."""
-
-        frozen = False
-        validate_assignment = True
+    model_config = ConfigDict(
+        frozen=False,
+        validate_assignment=True,
+    )
 
 
 class Schedule(BaseModel):
@@ -522,8 +519,7 @@ class Schedule(BaseModel):
         units_count = len(self.get_units_with_shifts())
         return f"Schedule for {period}: {total} shifts across {units_count} units"
 
-    class Config:
-        """Pydantic configuration."""
-
-        frozen = False
-        validate_assignment = True
+    model_config = ConfigDict(
+        frozen=False,
+        validate_assignment=True,
+    )

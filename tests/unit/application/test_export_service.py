@@ -19,7 +19,7 @@ from schedule_dnd.domain.exceptions import (
     UnsupportedFormatError,
 )
 from schedule_dnd.domain.models import Schedule, ScheduleMetadata, Shift, Unit
-from schedule_dnd.infrastructure.exporters.base import ScheduleExporter
+from schedule_dnd.infrastructure.exporters.base import BaseExporter
 from schedule_dnd.infrastructure.repositories.base import ScheduleRepository
 
 # ═══════════════════════════════════════════════════════════
@@ -39,7 +39,7 @@ def mock_repository() -> Mock:
 @pytest.fixture
 def mock_exporter() -> Mock:
     """Create a mock exporter."""
-    exporter = MagicMock(spec=ScheduleExporter)
+    exporter = MagicMock(spec=BaseExporter)
     exporter.export = Mock()
     exporter.get_default_filename = Mock(return_value="schedule_2025_10.json")
     return exporter
@@ -136,7 +136,7 @@ class TestExportSchedule:
         ]
 
         for fmt in formats:
-            mock_exporter = MagicMock(spec=ScheduleExporter)
+            mock_exporter = MagicMock(spec=BaseExporter)
             mock_exporter.export.return_value = Path(f"test.{fmt.value}")
             mock_factory.create.return_value = mock_exporter
 
@@ -340,7 +340,7 @@ class TestExportToAllFormats:
     ) -> None:
         """Test exporting to all supported formats."""
         # Arrange
-        mock_exporter = MagicMock(spec=ScheduleExporter)
+        mock_exporter = MagicMock(spec=BaseExporter)
         output_file = tmp_path / "test.json"
         output_file.write_text("{}")
         mock_exporter.export.return_value = output_file
@@ -380,7 +380,7 @@ class TestExportToAllFormats:
 
         # Arrange
         def create_exporter(format_type: ExportFormat):
-            mock_exp = MagicMock(spec=ScheduleExporter)
+            mock_exp = MagicMock(spec=BaseExporter)
             if format_type == ExportFormat.JSON:
                 # JSON export succeeds
                 output = tmp_path / "test.json"
