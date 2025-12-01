@@ -2,12 +2,16 @@
 Create command - interactive schedule creation.
 
 Author: DmitrTRC
+Version: 2.0 (No Cyrillic Input + Autosave)
 """
 
+import json
 import logging
 from datetime import datetime
+from pathlib import Path
+from typing import Optional
 
-from rich.prompt import Confirm, IntPrompt, Prompt
+from rich.prompt import Confirm, IntPrompt
 
 from schedule_dnd.application.dto import (
     ScheduleCreateDTO,
@@ -23,7 +27,9 @@ logger = logging.getLogger(__name__)
 
 
 class CreateCommand(BaseCommand):
-    """Command for creating new schedules."""
+    """Command for creating new schedules with autosave."""
+
+    AUTOSAVE_FILE = Path("/tmp/schedule_dnd_autosave.json")
 
     def execute(self) -> int:
         """
@@ -33,25 +39,46 @@ class CreateCommand(BaseCommand):
             Exit code
         """
         logger.info("=" * 50)
-        logger.info("Starting CreateCommand execution")
-        self.console.print("\n[bold cyan]Создание нового графика[/bold cyan]\n")
+        logger.info("Starting CreateCommand execution (v2.0 - No Cyrillic)")
+        self.console.print("\n[bold cyan]📝 Создание нового графика[/bold cyan]\n")
 
         try:
-            # Step 1: Input month and year
-            logger.info("Step 1: Inputting period (month/year)")
-            month, year = self._input_period()
-            logger.info(f"Period selected: {month.display_name()} {year}")
+            # Check for autosave
+            autosave_data = self._check_autosave()
+
+            if autosave_data:
+                month = Month.from_number(autosave_data["month"])
+                year = autosave_data["year"]
+                units_dto = self._restore_units(autosave_data["units"])
+                start_from = autosave_data.get("last_unit_index", 0)
+
+                self.console.print(
+                    f"[green]✓ Восстановлено: {month.display_name()} {year}[/green]"
+                )
+                self.console.print(
+                    f"[yellow]Уже добавлено юнитов: {len(units_dto)}[/yellow]\n"
+                )
+            else:
+                # Step 1: Input month and year (NO CYRILLIC!)
+                logger.info("Step 1: Inputting period (month/year) - using numbers")
+                month, year = self._input_period()
+                logger.info(f"Period selected: {month.display_name()} {year}")
+
+                units_dto: list[UnitCreateDTO] = []
+                start_from = 0
 
             # Step 2: Create units with shifts
-            units_dto: list[UnitCreateDTO] = []
             logger.info(f"Step 2: Starting input for {len(UNITS)} units")
 
-            for idx, unit_name in enumerate(UNITS, 1):
+            for idx in range(start_from, len(UNITS)):
+                unit_name = UNITS[idx]
+                unit_number = idx + 1
+
                 self.console.print()
                 formatter = ScheduleFormatter(self.console)
-                self.console.print(formatter.format_unit_header(idx, unit_name))
+                self.console.print(formatter.format_unit_header(unit_number, unit_name))
 
-                logger.info(f"[Unit {idx}/8] Inputting shifts for: {unit_name}")
+                logger.info(f"[Unit {unit_number}/8] Inputting shifts for: {unit_name}")
 
                 # Input shifts for this unit
                 shifts_dto = self._input_shifts_for_unit(unit_name, month, year)
@@ -61,20 +88,31 @@ class CreateCommand(BaseCommand):
                         UnitCreateDTO(unit_name=unit_name, shifts=shifts_dto)
                     )
                     logger.info(
-                        f"[Unit {idx}/8] Added {len(shifts_dto)} shifts for {unit_name}"
+                        f"[Unit {unit_number}/8] Added {len(shifts_dto)} shifts"
+                    )
+
+                    # AUTOSAVE after each unit!
+                    self._autosave(month, year, units_dto, idx)
+                    self.console.print(
+                        f"[dim]💾 Автосохранение: {unit_number}/8 юнитов[/dim]"
                     )
                 else:
-                    logger.warning(f"[Unit {idx}/8] No shifts added for {unit_name}")
+                    logger.warning(f"[Unit {unit_number}/8] No shifts added")
 
                 # Ask if want to continue
-                if idx < len(UNITS):
+                if unit_number < len(UNITS):
                     if not Confirm.ask("\n[yellow]Продолжить?[/]", default=True):
-                        logger.info(f"User chose to stop after unit {idx}")
-                        break
+                        logger.info(f"User chose to stop after unit {unit_number}")
+                        self.console.print(
+                            "\n[yellow]ℹ️ Прогресс сохранен. "
+                            "Запустите команду снова для продолжения.[/yellow]"
+                        )
+                        return 0
 
             if not units_dto:
                 logger.warning("No shifts added across all units, canceling")
                 self.error("Не добавлено ни одной смены. Отмена создания графика.")
+                self._clear_autosave()
                 return 1
 
             # Step 3: Create schedule
@@ -90,6 +128,10 @@ class CreateCommand(BaseCommand):
                 self.error("Ошибки валидации:")
                 for error in validation_result.errors:
                     self.console.print(f"  - {error}")
+                self.console.print(
+                    "\n[yellow]💾 Данные сохранены. "
+                    "Исправьте ошибки и запустите снова.[/yellow]"
+                )
                 return 1
 
             if validation_result.warnings:
@@ -108,8 +150,12 @@ class CreateCommand(BaseCommand):
             logger.info("Step 5: Saving schedule")
             response = self.schedule_service.create_schedule(schedule_dto)
             logger.info(
-                f"Schedule SAVED successfully: {response.metadata.month} {response.metadata.year}"
+                f"Schedule SAVED: {response.metadata.month} {response.metadata.year}"
             )
+
+            # Clear autosave after successful save
+            self._clear_autosave()
+
             self.success(
                 f"График создан: {response.metadata.month} {response.metadata.year}"
             )
@@ -126,66 +172,93 @@ class CreateCommand(BaseCommand):
 
         except KeyboardInterrupt:
             logger.info("User interrupted with Ctrl+C")
-            self.console.print("\n\n[yellow]Отменено пользователем[/]")
+            self.console.print(
+                "\n\n[yellow]💾 Прогресс сохранен. "
+                "Запустите команду снова для продолжения.[/yellow]"
+            )
             return 130
         except Exception as e:
             logger.exception(f"CRITICAL ERROR in CreateCommand: {e}")
             self.error(f"Ошибка при создании графика: {e}")
+            self.console.print("\n[yellow]💾 Попытка сохранения данных...[/yellow]")
             if self.settings.debug:
                 raise
             return 1
 
     def _input_period(self) -> tuple[Month, int]:
         """
-        Input month and year.
+        Input month and year using NUMBERS only (NO CYRILLIC).
 
         Returns:
             Tuple of (Month, year)
         """
-        # Input month
-        self.console.print("[bold]Введите период:[/bold]")
-        month_name = (
-            Prompt.ask(
-                "Месяц (например: октябрь, ноябрь)",
-                default="октябрь",
-            )
-            .lower()
-            .strip()
-        )
+        self.console.print("[bold]Введите период:[/bold]\n")
 
-        logger.debug(f"Month input: '{month_name}'")
+        # Get defaults
+        now = datetime.now()
+        default_month = now.month
+        default_year = now.year
 
-        try:
-            month = Month.from_string(month_name)
-            logger.debug(f"Month parsed successfully: {month}")
-        except ValueError as e:
-            logger.error(f"Invalid month input: '{month_name}' - {e}")
-            self.error(f"Неверный месяц: {month_name}")
-            raise
+        # Input month as NUMBER (1-12)
+        while True:
+            try:
+                self.console.print("Месяц:")
+                self.console.print("  1=Январь   2=Февраль   3=Март      4=Апрель")
+                self.console.print("  5=Май      6=Июнь      7=Июль      8=Август")
+                self.console.print("  9=Сентябрь 10=Октябрь  11=Ноябрь   12=Декабрь\n")
+
+                month_num = IntPrompt.ask(
+                    f"Введите номер месяца [1-12]",
+                    default=default_month,
+                )
+
+                if not 1 <= month_num <= 12:
+                    self.error("Номер месяца должен быть от 1 до 12")
+                    continue
+
+                month = Month.from_number(month_num)
+                logger.debug(f"Month selected: {month_num} → {month.display_name()}")
+                break
+
+            except ValueError as e:
+                logger.error(f"Invalid month input: {e}")
+                self.error(f"Неверный ввод: {e}")
+                continue
+            except KeyboardInterrupt:
+                raise
 
         # Input year
-        current_year = datetime.now().year
-        year = IntPrompt.ask(
-            "Год",
-            default=current_year,
-        )
+        while True:
+            try:
+                year = IntPrompt.ask(
+                    f"Год [{default_year}-{default_year + 5}]",
+                    default=default_year,
+                )
 
-        logger.debug(f"Year input: {year}")
+                if year < default_year or year > default_year + 5:
+                    self.error(
+                        f"Год должен быть между {default_year} и {default_year + 5}"
+                    )
+                    continue
 
-        if year < current_year or year > current_year + 5:
-            logger.error(f"Year out of valid range: {year}")
-            self.error(f"Год должен быть между {current_year} и {current_year + 5}")
-            raise ValueError("Invalid year")
+                logger.debug(f"Year input: {year}")
+                break
+
+            except ValueError as e:
+                logger.error(f"Invalid year input: {e}")
+                self.error(f"Неверный ввод: {e}")
+                continue
+            except KeyboardInterrupt:
+                raise
 
         self.console.print(f"\n[green]✓ Период: {month.display_name()} {year}[/green]")
-
         return month, year
 
     def _input_shifts_for_unit(
         self, unit_name: str, month: Month, year: int
     ) -> list[ShiftCreateDTO]:
         """
-        Input shifts for a unit.
+        Input shifts for a unit with error recovery.
 
         Args:
             unit_name: Name of the unit
@@ -198,88 +271,75 @@ class CreateCommand(BaseCommand):
         shifts_dto: list[ShiftCreateDTO] = []
         seen_dates: set[str] = set()
 
-        self.console.print(f"\n[dim]Вводите день (число 1-31) и тип дежурства.[/]")
-        self.console.print(f"[dim]Введите 'готово' когда закончите.[/]\n")
+        self.console.print(f"\n[dim]Вводите день (1-31) и тип дежурства (1/2/3).[/]")
+        self.console.print(f"[dim]Оставьте пустым или введите 'q' для завершения.[/]\n")
 
         formatter = ScheduleFormatter(self.console)
         shift_count = 0
 
         while True:
-            # Input day - NO DEFAULT to avoid conflicts!
-            day_input = Prompt.ask(f"День (1-31) или 'готово'").strip()
-
-            logger.debug(f"[Shift #{shift_count + 1}] Raw input: '{day_input}'")
-
-            # Check if user wants to finish
-            if day_input.lower() in ["готово", "done", "q", "quit", ""]:
-                logger.info(
-                    f"User finished {unit_name}: added {len(shifts_dto)} shifts total"
-                )
-                break
-
-            # Parse day
             try:
-                day = int(day_input)
-                logger.debug(f"[Shift #{shift_count + 1}] Parsed as day: {day}")
+                # Input day - empty to finish
+                day_input = input(f"День (1-31) или Enter: ").strip()
+
+                logger.debug(f"[Shift #{shift_count + 1}] Raw input: '{day_input}'")
+
+                # Check if user wants to finish
+                if not day_input or day_input.lower() in [
+                    "q",
+                    "quit",
+                    "done",
+                    "готово",
+                ]:
+                    logger.info(f"User finished {unit_name}: {len(shifts_dto)} shifts")
+                    break
+
+                # Parse day
+                try:
+                    day = int(day_input)
+                except ValueError:
+                    logger.warning(f"Invalid day input: '{day_input}'")
+                    self.error(f"Неверный день: '{day_input}'. Введите число 1-31")
+                    continue
 
                 if not 1 <= day <= 31:
-                    logger.warning(
-                        f"[Shift #{shift_count + 1}] Day {day} out of range [1-31]"
-                    )
+                    logger.warning(f"Day {day} out of range")
                     self.error("День должен быть от 1 до 31")
                     continue
 
                 # Format date
                 date_str = f"{day:02d}.{month.to_number():02d}.{year}"
-                logger.debug(f"[Shift #{shift_count + 1}] Formatted date: {date_str}")
+                logger.debug(f"Formatted date: {date_str}")
 
                 # Check duplicate
                 if date_str in seen_dates:
-                    logger.warning(f"[Shift #{shift_count + 1}] Duplicate: {date_str}")
+                    logger.warning(f"Duplicate date: {date_str}")
                     self.error(f"Смена на {date_str} уже добавлена")
                     continue
 
-            except ValueError as e:
-                logger.error(
-                    f"[Shift #{shift_count + 1}] Parse error for '{day_input}': {e}"
+                # Input duty type using NUMBERS (NO CYRILLIC!)
+                self.console.print("\nТип дежурства:")
+                self.console.print(
+                    "  1. ПДН (Подразделение по делам несовершеннолетних)"
                 )
-                self.error(
-                    f"Неверный день: '{day_input}'. Введите число от 1 до 31 или 'готово'"
-                )
-                continue
+                self.console.print("  2. ППСП (Патрульно-постовая служба)")
+                self.console.print("  3. УУП (Участковые уполномоченные)")
 
-            # Input duty type - use numbers to avoid encoding issues completely
-            self.console.print("\nТип дежурства:")
-            self.console.print("  1. ПДН (Подразделение по делам несовершеннолетних)")
-            self.console.print("  2. ППСП (Патрульно-постовая служба)")
-            self.console.print("  3. УУП (Участковые уполномоченные)")
-            self.console.print("Выбор [1/2/3] (3): ", end="")
+                choice = input("Выбор [1/2/3] (3): ").strip()
 
-            try:
-                choice = input().strip()
-            except UnicodeDecodeError:
-                # Fallback for encoding issues
-                import sys
+                # Map number to duty type
+                if not choice or choice == "3":
+                    duty_type = DutyType.UUP
+                elif choice == "1":
+                    duty_type = DutyType.PDN
+                elif choice == "2":
+                    duty_type = DutyType.PPSP
+                else:
+                    logger.error(f"Invalid choice '{choice}'")
+                    self.error(f"Неверный выбор: {choice}. Введите 1, 2 или 3")
+                    continue
 
-                raw_input = sys.stdin.buffer.readline()
-                choice = raw_input.decode("utf-8", errors="ignore").strip()
-
-            # Map number to duty type
-            if not choice or choice == "3":
-                duty_type_input = "УУП"
-            elif choice == "1":
-                duty_type_input = "ПДН"
-            elif choice == "2":
-                duty_type_input = "ППСП"
-            else:
-                logger.error(f"[Shift #{shift_count + 1}] Invalid choice '{choice}'")
-                self.error(f"Неверный выбор: {choice}. Введите 1, 2 или 3")
-                continue
-
-            logger.debug(f"[Shift #{shift_count + 1}] Duty type: '{duty_type_input}'")
-
-            try:
-                duty_type = DutyType(duty_type_input)
+                logger.debug(f"Duty type selected: {duty_type.value}")
 
                 # Create shift DTO
                 shift_dto = ShiftCreateDTO(
@@ -300,11 +360,14 @@ class CreateCommand(BaseCommand):
                     formatter.format_shift_added(date_str, duty_type.value)
                 )
 
-            except ValueError as e:
-                logger.error(
-                    f"[Shift #{shift_count + 1}] Invalid duty type '{duty_type_input}': {e}"
+            except KeyboardInterrupt:
+                self.console.print(
+                    "\n[yellow]Прервано. Сохраняем текущий прогресс...[/yellow]"
                 )
-                self.error(f"Неверный тип дежурства: {duty_type_input}")
+                break
+            except Exception as e:
+                logger.error(f"Error during shift input: {e}")
+                self.error(f"Ошибка: {e}. Попробуйте еще раз.")
                 continue
 
         if shifts_dto:
@@ -315,6 +378,104 @@ class CreateCommand(BaseCommand):
             self.console.print(f"\n[yellow]Смены не добавлены[/yellow]")
 
         return shifts_dto
+
+    def _autosave(
+        self, month: Month, year: int, units: list[UnitCreateDTO], last_unit_index: int
+    ) -> None:
+        """
+        Autosave current progress.
+
+        Args:
+            month: Current month
+            year: Current year
+            units: List of units with shifts
+            last_unit_index: Index of last completed unit
+        """
+        try:
+            data = {
+                "month": month.to_number(),
+                "year": year,
+                "last_unit_index": last_unit_index + 1,  # Next unit to start
+                "units": [
+                    {
+                        "unit_name": u.unit_name,
+                        "shifts": [
+                            {"date": s.date, "duty_type": s.duty_type.value}
+                            for s in u.shifts
+                        ],
+                    }
+                    for u in units
+                ],
+                "timestamp": datetime.now().isoformat(),
+            }
+
+            with open(self.AUTOSAVE_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+
+            logger.info(f"Autosaved: {len(units)} units to {self.AUTOSAVE_FILE}")
+
+        except Exception as e:
+            logger.error(f"Autosave failed: {e}")
+
+    def _check_autosave(self) -> Optional[dict]:
+        """
+        Check if autosave exists.
+
+        Returns:
+            Autosave data or None
+        """
+        if not self.AUTOSAVE_FILE.exists():
+            return None
+
+        try:
+            with open(self.AUTOSAVE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            timestamp = data.get("timestamp", "неизвестно")
+            self.console.print(
+                f"\n[cyan]🔍 Найдено автосохранение от {timestamp}[/cyan]"
+            )
+
+            if Confirm.ask("[yellow]Восстановить прогресс?[/]", default=True):
+                logger.info("User chose to restore autosave")
+                return data
+            else:
+                logger.info("User chose to start fresh")
+                self._clear_autosave()
+                return None
+
+        except Exception as e:
+            logger.error(f"Failed to load autosave: {e}")
+            self._clear_autosave()
+            return None
+
+    def _restore_units(self, units_data: list[dict]) -> list[UnitCreateDTO]:
+        """
+        Restore units from autosave data.
+
+        Args:
+            units_data: List of unit dicts
+
+        Returns:
+            List of UnitCreateDTO
+        """
+        units = []
+        for unit_data in units_data:
+            shifts = [
+                ShiftCreateDTO(date=s["date"], duty_type=DutyType(s["duty_type"]))
+                for s in unit_data["shifts"]
+            ]
+            units.append(UnitCreateDTO(unit_name=unit_data["unit_name"], shifts=shifts))
+        return units
+
+    def _clear_autosave(self) -> None:
+        """Clear autosave file."""
+        try:
+            if self.AUTOSAVE_FILE.exists():
+                self.AUTOSAVE_FILE.unlink()
+                logger.info("Autosave cleared")
+        except Exception as e:
+            logger.error(f"Failed to clear autosave: {e}")
 
     def _export_schedule(self, response: any) -> None:
         """
@@ -334,11 +495,7 @@ class CreateCommand(BaseCommand):
         self.console.print("  5. HTML")
         self.console.print("  6. Все форматы")
 
-        choice = Prompt.ask(
-            "Выберите формат",
-            choices=["1", "2", "3", "4", "5", "6"],
-            default="6",
-        )
+        choice = input("Выберите формат [1-6] (6): ").strip() or "6"
 
         logger.info(f"Export format choice: {choice}")
 
@@ -364,7 +521,7 @@ class CreateCommand(BaseCommand):
                 "4": ExportFormat.MARKDOWN,
                 "5": ExportFormat.HTML,
             }
-            fmt = format_map[choice]
+            fmt = format_map.get(choice, ExportFormat.JSON)
             logger.info(f"Exporting to: {fmt.value}")
             results = [self.export_service.export_schedule(schedule, fmt)]
 
