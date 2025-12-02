@@ -15,7 +15,7 @@ Production-ready консольное приложение для управле
 - 📊 **5 форматов экспорта**: JSON, Excel, CSV, Markdown, HTML
 - 🎨 **Красивый CLI** интерфейс с использованием Rich
 - 🏗️ **Clean Architecture** с разделением на слои
-- 🧪 **95%+ покрытие** тестами
+- 🧪 **72%+ покрытие** тестами (цель 90%)
 - 🔒 **Type-safe** - 100% type hints с mypy
 
 ## 🚀 Быстрый старт
@@ -63,9 +63,9 @@ poetry run pytest tests/ -v
 
 - 📖 [**Быстрый старт**](QUICKSTART.md) - Начните здесь!
 - 🎯 [**Следующие шаги**](NEXT_STEPS.md) - Что делать дальше
-- 📊 [**Статус проекта**](PROJECT_STATUS.md) - Текущее состояние (85%)
+- 📊 [**Статус проекта**](PROJECT_STATUS.md) - Текущее состояние (92%)
 - 🏗️ [**Архитектура**](docs/architecture.md) - Дизайн приложения
-- 🔧 [**API документация**](docs/api.md) - Справка по API
+- 🔧 [**API Reference**](docs/API_REFERENCE.md) - Полная техническая документация кода
 - 🤝 [**Contributing**](docs/contributing.md) - Как внести вклад
 
 ## 📦 Структура проекта
@@ -182,7 +182,7 @@ for result in results:
 ## 🎯 Типы дежурств
 
 - **ПДН** - Подразделение по делам несовершеннолетних
-- **ППСП** - Патрульно-постовая служба полиции  
+- **ППСП** - Патрульно-постовая служба полиции
 - **УУП** - Участковые уполномоченные полиции
 
 ## 📤 Форматы экспорта
@@ -270,27 +270,27 @@ git commit -m "message" --no-verify
 ## 📈 Прогресс разработки
 
 ```
-██████████████████████████████████░░░░░ 85%
+███████████████████████████████████████░ 92%
 
 ✅ Phase 1 - Domain Layer          100%
-✅ Phase 2 - Infrastructure         90%
-⏳ Phase 3 - Presentation/CLI       30%
-⏳ Phase 4 - Tests                  55%
+✅ Phase 2 - Infrastructure         100%
+✅ Phase 3 - Presentation/CLI       100%
+⏳ Phase 4 - Tests & Docs           72%
 ```
 
 ### Что готово ✅
 - Domain models с полной валидацией
 - Сервисы (Schedule, Export)
 - Репозитории (JSON с бэкапами)
-- 5 экспортеров
+- 5 экспортеров с улучшенным визуальным разделением
 - Конфигурация (Pydantic Settings)
-- 95% тестов domain layer
+- CLI интерфейс с интерактивным вводом
+- 282 passing tests (72.36% coverage)
 
 ### В разработке ⏳
-- CLI команды (create, load, export)
-- Форматтеры для вывода
-- Тесты для services и infrastructure
-- Пользовательская документация
+- PWA (Progressive Web App) версия
+- Увеличение coverage до 90%
+- Расширенная пользовательская документация
 
 ## 🤝 Contributing
 
@@ -321,6 +321,6 @@ MIT License - см. [LICENSE](LICENSE)
 
 ---
 
-**Версия:** 2.0.0  
-**Статус:** 85% Complete - Production Ready Infrastructure  
-**Последнее обновление:** 21 октября 2025
+**Версия:** 2.1.0
+**Статус:** 92% Complete - Production Ready with Enhanced Exports
+**Последнее обновление:** 2 декабря 2025
