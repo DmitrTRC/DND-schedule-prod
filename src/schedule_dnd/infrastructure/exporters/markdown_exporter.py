@@ -106,27 +106,36 @@ class MarkdownExporter(BaseExporter):
             lines.append(f"- {duty_type}: {count}")
         lines.append("")
 
-        # Schedule table
+        # Schedule tables - separate table for each unit
         lines.append("## График дежурств")
         lines.append("")
 
-        # Table header
-        lines.append(
-            "| Подразделение | Дата | День недели | Тип дежурства | Время | Примечания |"
-        )
-        lines.append(
-            "|---------------|------|-------------|---------------|-------|------------|"
-        )
+        for unit_index, unit in enumerate(schedule.units, 1):
+            # Unit header with number
+            lines.append(f"### {unit_index}. {unit.unit_name}")
+            lines.append("")
 
-        # Table rows
-        for unit in schedule.units:
+            if not unit.shifts:
+                lines.append("*Дежурств нет*")
+                lines.append("")
+                lines.append("---")
+                lines.append("")
+                continue
+
+            # Table header for this unit
+            lines.append("| Дата | День недели | Тип дежурства | Время | Примечания |")
+            lines.append("|------|-------------|---------------|-------|------------|")
+
+            # Table rows for this unit
             for shift in unit.shifts:
                 lines.append(
-                    f"| {unit.unit_name} | {shift.date} | {shift.get_day_of_week()} | "
+                    f"| {shift.date} | {shift.get_day_of_week()} | "
                     f"{shift.duty_type.value} | {shift.time} | {shift.notes} |"
                 )
 
-        lines.append("")
+            lines.append("")
+            lines.append("---")  # Horizontal divider between units
+            lines.append("")
 
         # Additional note
         if schedule.metadata.note:

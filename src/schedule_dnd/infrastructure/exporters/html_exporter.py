@@ -151,16 +151,38 @@ class HTMLExporter(BaseExporter):
             padding: 30px;
         }}
 
+        .unit-section {{
+            margin-bottom: 40px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #e9ecef;
+        }}
+
+        .unit-header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }}
+
+        .unit-empty {{
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            background: #f8f9fa;
+        }}
+
         table {{
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
             background: white;
         }}
 
         thead {{
-            background: #667eea;
-            color: white;
+            background: #f8f9fa;
+            color: #495057;
         }}
 
         th, td {{
@@ -178,6 +200,10 @@ class HTMLExporter(BaseExporter):
 
         tbody tr:hover {{
             background: #f8f9fa;
+        }}
+
+        tbody tr:last-child td {{
+            border-bottom: none;
         }}
 
         .badge {{
@@ -250,8 +276,14 @@ class HTMLExporter(BaseExporter):
                 break-inside: avoid;
             }}
 
-            thead {{
+            .unit-header {{
                 background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }}
+
+            thead {{
+                background: #f8f9fa !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }}
@@ -286,37 +318,51 @@ class HTMLExporter(BaseExporter):
         html += """
         </div>
 
-        <div class="content">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Подразделение</th>
-                        <th>Дата</th>
-                        <th>День недели</th>
-                        <th>Тип дежурства</th>
-                        <th>Время</th>
-                        <th>Примечания</th>
-                    </tr>
-                </thead>
-                <tbody>"""
+        <div class="content">"""
 
-        # Add table rows
-        for unit in schedule.units:
-            for shift in unit.shifts:
-                duty_badge_class = f"badge-{shift.duty_type.value.lower()}"
-                html += f"""
-                    <tr>
-                        <td><strong>{unit.unit_name}</strong></td>
-                        <td>{shift.date}</td>
-                        <td>{shift.get_day_of_week()}</td>
-                        <td><span class="badge {duty_badge_class}">{shift.duty_type.value}</span></td>
-                        <td>{shift.time}</td>
-                        <td>{shift.notes}</td>
-                    </tr>"""
+        # Add separate section for each unit
+        for unit_index, unit in enumerate(schedule.units, 1):
+            html += f"""
+            <div class="unit-section">
+                <div class="unit-header">
+                    {unit_index}. {unit.unit_name}
+                </div>"""
 
-        html += """
-                </tbody>
-            </table>"""
+            if not unit.shifts:
+                html += """
+                <div class="unit-empty">Дежурств нет</div>"""
+            else:
+                html += """
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>День недели</th>
+                            <th>Тип дежурства</th>
+                            <th>Время</th>
+                            <th>Примечания</th>
+                        </tr>
+                    </thead>
+                    <tbody>"""
+
+                # Add table rows for this unit
+                for shift in unit.shifts:
+                    duty_badge_class = f"badge-{shift.duty_type.value.lower()}"
+                    html += f"""
+                        <tr>
+                            <td>{shift.date}</td>
+                            <td>{shift.get_day_of_week()}</td>
+                            <td><span class="badge {duty_badge_class}">{shift.duty_type.value}</span></td>
+                            <td>{shift.time}</td>
+                            <td>{shift.notes}</td>
+                        </tr>"""
+
+                html += """
+                    </tbody>
+                </table>"""
+
+            html += """
+            </div>"""
 
         # Add metadata if enabled
         if self.settings.include_metadata:

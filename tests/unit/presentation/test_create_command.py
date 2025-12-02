@@ -19,12 +19,12 @@ from schedule_dnd.domain.enums import DutyType, ExportFormat, Month
 class TestCreateCommand:
     """Tests for CreateCommand."""
 
-    @patch("schedule_dnd.presentation.cli.commands.create.Prompt.ask")
+    @patch("builtins.input")
     @patch("schedule_dnd.presentation.cli.commands.create.IntPrompt.ask")
     @patch("schedule_dnd.presentation.cli.commands.create.Confirm.ask")
     @patch("schedule_dnd.presentation.cli.commands.create.BaseCommand.__init__")
     def test_execute_success_minimal(
-        self, mock_base_init, mock_confirm, mock_int_prompt, mock_prompt
+        self, mock_base_init, mock_confirm, mock_int_prompt, mock_input
     ):
         """Test successful execution with minimal input (no shifts)."""
         from schedule_dnd.presentation.cli.commands.create import CreateCommand
@@ -38,22 +38,21 @@ class TestCreateCommand:
         cmd.export_service = Mock()
         cmd.repository = Mock()
 
-        mock_prompt.side_effect = ["октябрь", "готово"]
-        mock_int_prompt.return_value = 2025
-        mock_confirm.return_value = False
+        mock_int_prompt.side_effect = [10, 2025]  # месяц (октябрь=10), год
+        mock_input.return_value = ""  # Empty input - no shifts for all units
+        mock_confirm.return_value = True  # Continue through all units
 
         result = cmd.execute()
 
-        # Should fail because no shifts added
+        # Should fail because no shifts added across all units
         assert result == 1
 
-    @patch("schedule_dnd.presentation.cli.commands.create.Prompt.ask")
     @patch("schedule_dnd.presentation.cli.commands.create.IntPrompt.ask")
     @patch("schedule_dnd.presentation.cli.commands.create.Confirm.ask")
     @patch("builtins.input")
     @patch("schedule_dnd.presentation.cli.commands.create.BaseCommand.__init__")
     def test_execute_success_with_shifts(
-        self, mock_base_init, mock_input, mock_confirm, mock_int_prompt, mock_prompt
+        self, mock_base_init, mock_input, mock_confirm, mock_int_prompt
     ):
         """Test successful execution with shifts."""
         from schedule_dnd.application.dto import ValidationResultDTO
@@ -78,18 +77,29 @@ class TestCreateCommand:
         response.metadata.year = 2025
         cmd.schedule_service.create_schedule.return_value = response
 
-        mock_prompt.side_effect = ["октябрь", "15", "готово"]
-        mock_int_prompt.return_value = 2025
-        mock_input.return_value = "1"
-        mock_confirm.side_effect = [False, False]
+        mock_int_prompt.side_effect = [10, 2025]  # месяц (октябрь=10), год
+        mock_input.side_effect = [
+            "15",
+            "1",
+            "",  # Unit 1: день 15, тип 1 (ПДН), завершить
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",  # Units 2-8: пусто (нет смен)
+        ]
+        # 7 раз "Продолжить?" после юнитов 1-7, затем "Экспортировать?" - False
+        mock_confirm.side_effect = [True] * 7 + [False]
 
         result = cmd.execute()
 
         assert result == 0
 
-    @patch("schedule_dnd.presentation.cli.commands.create.Prompt.ask")
+    @patch("schedule_dnd.presentation.cli.commands.create.IntPrompt.ask")
     @patch("schedule_dnd.presentation.cli.commands.create.BaseCommand.__init__")
-    def test_execute_keyboard_interrupt(self, mock_base_init, mock_prompt):
+    def test_execute_keyboard_interrupt(self, mock_base_init, mock_int_prompt):
         """Test execution with KeyboardInterrupt."""
         from schedule_dnd.presentation.cli.commands.create import CreateCommand
 
@@ -97,7 +107,7 @@ class TestCreateCommand:
         cmd = CreateCommand()
         cmd.console = Mock()
 
-        mock_prompt.side_effect = KeyboardInterrupt()
+        mock_int_prompt.side_effect = KeyboardInterrupt()
 
         result = cmd.execute()
 
@@ -110,10 +120,9 @@ class TestCreateCommand:
 class TestInputPeriod:
     """Tests for CreateCommand._input_period()"""
 
-    @patch("schedule_dnd.presentation.cli.commands.create.Prompt.ask")
     @patch("schedule_dnd.presentation.cli.commands.create.IntPrompt.ask")
     @patch("schedule_dnd.presentation.cli.commands.create.BaseCommand.__init__")
-    def test_input_period_success(self, mock_base_init, mock_int_prompt, mock_prompt):
+    def test_input_period_success(self, mock_base_init, mock_int_prompt):
         """Test successful period input."""
         from schedule_dnd.presentation.cli.commands.create import CreateCommand
 
@@ -121,8 +130,7 @@ class TestInputPeriod:
         cmd = CreateCommand()
         cmd.console = Mock()
 
-        mock_prompt.return_value = "октябрь"
-        mock_int_prompt.return_value = 2025
+        mock_int_prompt.side_effect = [10, 2025]  # месяц (октябрь=10), год
 
         month, year = cmd._input_period()
 
@@ -136,9 +144,9 @@ class TestInputPeriod:
 class TestInputShiftsForUnit:
     """Tests for CreateCommand._input_shifts_for_unit()"""
 
-    @patch("schedule_dnd.presentation.cli.commands.create.Prompt.ask")
+    @patch("builtins.input")
     @patch("schedule_dnd.presentation.cli.commands.create.BaseCommand.__init__")
-    def test_input_shifts_empty(self, mock_base_init, mock_prompt):
+    def test_input_shifts_empty(self, mock_base_init, mock_input):
         """Test input shifts with immediate 'готово'."""
         from schedule_dnd.presentation.cli.commands.create import CreateCommand
 
@@ -146,7 +154,7 @@ class TestInputShiftsForUnit:
         cmd = CreateCommand()
         cmd.console = Mock()
 
-        mock_prompt.return_value = "готово"
+        mock_input.return_value = ""  # Empty input to finish
 
         shifts = cmd._input_shifts_for_unit(
             "ДНД «Всеволожский дозор»", Month.OCTOBER, 2025
@@ -154,10 +162,9 @@ class TestInputShiftsForUnit:
 
         assert len(shifts) == 0
 
-    @patch("schedule_dnd.presentation.cli.commands.create.Prompt.ask")
     @patch("builtins.input")
     @patch("schedule_dnd.presentation.cli.commands.create.BaseCommand.__init__")
-    def test_input_shifts_single_shift(self, mock_base_init, mock_input, mock_prompt):
+    def test_input_shifts_single_shift(self, mock_base_init, mock_input):
         """Test input single shift."""
         from schedule_dnd.presentation.cli.commands.create import CreateCommand
 
@@ -165,8 +172,8 @@ class TestInputShiftsForUnit:
         cmd = CreateCommand()
         cmd.console = Mock()
 
-        mock_prompt.side_effect = ["15", "готово"]
-        mock_input.return_value = "1"
+        # First call: day "15", second call: duty type "1", third call: empty to finish
+        mock_input.side_effect = ["15", "1", ""]
 
         shifts = cmd._input_shifts_for_unit(
             "ДНД «Всеволожский дозор»", Month.OCTOBER, 2025
@@ -183,9 +190,9 @@ class TestInputShiftsForUnit:
 class TestExportSchedule:
     """Tests for CreateCommand._export_schedule()"""
 
-    @patch("schedule_dnd.presentation.cli.commands.create.Prompt.ask")
+    @patch("builtins.input")
     @patch("schedule_dnd.presentation.cli.commands.create.BaseCommand.__init__")
-    def test_export_schedule_json(self, mock_base_init, mock_prompt):
+    def test_export_schedule_json(self, mock_base_init, mock_input):
         """Test export to JSON format."""
         from schedule_dnd.presentation.cli.commands.create import CreateCommand
 
@@ -209,7 +216,7 @@ class TestExportSchedule:
         result.file_size = 1024  # Must be int
         cmd.export_service.export_schedule.return_value = result
 
-        mock_prompt.return_value = "1"
+        mock_input.return_value = "1"
 
         response = Mock()
         response.metadata.year = 2025
@@ -219,9 +226,9 @@ class TestExportSchedule:
 
         cmd.export_service.export_schedule.assert_called_once()
 
-    @patch("schedule_dnd.presentation.cli.commands.create.Prompt.ask")
+    @patch("builtins.input")
     @patch("schedule_dnd.presentation.cli.commands.create.BaseCommand.__init__")
-    def test_export_schedule_all_formats(self, mock_base_init, mock_prompt):
+    def test_export_schedule_all_formats(self, mock_base_init, mock_input):
         """Test export to all formats."""
         from schedule_dnd.presentation.cli.commands.create import CreateCommand
 
@@ -244,7 +251,7 @@ class TestExportSchedule:
         result.file_size = 2048  # Must be int
         cmd.export_service.export_to_all_formats.return_value = [result]
 
-        mock_prompt.return_value = "6"
+        mock_input.return_value = "6"
 
         response = Mock()
         response.metadata.year = 2025

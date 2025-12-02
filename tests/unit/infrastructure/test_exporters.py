@@ -591,12 +591,18 @@ class TestMarkdownExporter:
         assert "## Статистика" in content
         assert "## График дежурств" in content
 
-        # Check table structure
-        assert "| Подразделение |" in content
-        assert "|---------------|" in content
+        # Check separate tables for each unit (new structure)
+        assert "### 1. ДНД «Всеволожский дозор»" in content
+        assert "### 2. ДНД «Заневское ГП»" in content
+
+        # Check table header without "Подразделение" column
+        assert "| Дата | День недели | Тип дежурства |" in content
+        assert "|------|-------------|---------------|" in content
+
+        # Check horizontal dividers between units
+        assert "---" in content
 
         # Check data
-        assert "Всеволожский дозор" in content
         assert "01.10.2025" in content
         assert "ПДН" in content  # DutyType.PDN value is Russian "ПДН"
 
@@ -786,8 +792,10 @@ class TestHTMLExporter:
         # Check meta charset
         assert '<meta charset="UTF-8">' in content
 
-        # Verify Russian characters
-        assert "Подразделение" in content
+        # Verify Russian characters - check unit names in section headers
+        assert "Всеволожский дозор" in content
+        assert "Заневское ГП" in content
+        assert "дежурств" in content
 
     def test_get_file_extension(self):
         """Test HTML exporter returns correct file extension."""
