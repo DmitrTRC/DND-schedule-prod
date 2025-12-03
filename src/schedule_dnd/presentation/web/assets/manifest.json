@@ -1,0 +1,27 @@
+{
+  "name": "Schedule DND - Управление графиками ДНД",
+  "short_name": "Schedule DND",
+  "description": "Система управления графиками патрульных дежурств Добровольных Народных Дружин",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1976D2",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["productivity", "business"],
+  "lang": "ru"
+}
